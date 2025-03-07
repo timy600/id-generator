@@ -3,32 +3,32 @@
 import random
 import threading
 import itertools
+import atexit
 
-from .constants import ID_CHARACTERS, BASE
-
-
-def generate():
-    """Generates a unique 7-character ID"""
-    return "".join(random.choices(ID_CHARACTERS, k=7))
-
-
-def generate_bulk(num=1):
-    """Generates 'n' unique IDs efficiently"""
-    return [generate() for _ in range(num)]
+from .constants import ID_CHARACTERS
 
 
 class IDGenerator:
-    def __init__(self, filename="id_counter.txt", batch_size=1000):
+    def __init__(
+            self,
+            filename="id_counter.txt",
+            batch_size=1000,
+            id_characters=ID_CHARACTERS
+        ):
+        self.id_characters = id_characters
+        self.encoding_base = len(id_characters)
         self.filename = filename
         self.batch_size = batch_size  # Preallocated batch size
         self.lock = threading.Lock()
         self.counter = self._load_counter()
         self.local_counter = itertools.count(self.counter)  # Thread-local batch counter
 
-    # def __init__(self, filename='id_counter.txt'):
-    #     self.filename = filename
-    #     self.lock = threading.Lock()
-    #     self.counter = self._load_counter()
+        atexit.register(self._save_counter_on_exit)
+    
+    def _save_counter_on_exit(self):
+        """Ensures the counter is saved when the program exits."""
+        with self.lock:
+            self._save_counter(next(self.local_counter))  # Save the latest counter
 
     def _load_counter(self):
         try:
@@ -37,20 +37,15 @@ class IDGenerator:
         except FileNotFoundError:
             return 0
 
-    # def _save_counter(self):
-    #     with open(self.filename, 'w') as file:
-    #         file.write(str(self.counter))
-    #     # """Loads the last used counter from a file or starts from 1,000,000"""
-    #     # try:
-    #     #     with open(self.filename, 'r') as file:
-    #     #         return int(file.read().strip())
-    #     # except FileNotFoundError:
-    #     #     return 1_000_000  # Start from a high number to ensure 7-char length
-
     def _save_counter(self, value):
         """Saves the last allocated counter to the file"""
-        with open(self.filename, "w", encoding="utf-8") as file:
-            file.write(str(value))
+        try:
+            with open(self.filename, "w", encoding="utf-8") as file:
+                file.write(str(value))
+                # return int(file.read().strip())
+        except FileNotFoundError:
+            # return 1_000_000  # Start from a high number to ensure 7-char length
+            raise FileNotFoundError
 
     def _allocate_batch(self):
         """Allocates a new batch range for a thread, avoiding locks for each ID"""
@@ -65,34 +60,9 @@ class IDGenerator:
         """Encodes number into base34 (A-Z, 0-9, excluding I and O)"""
         res = []
         while num:
-            num, remainder = divmod(num, BASE)
-            res.append(ID_CHARACTERS[remainder])
+            num, remainder = divmod(num, self.encoding_base)
+            res.append(self.id_characters[remainder])
         return "".join(res[::-1]).zfill(7)
-
-    def _base34_encode_str(self, num):
-        # performance: 78.82s, 99.52s, 96.21s
-        id_str = ""
-        while num:
-            id_str = ID_CHARACTERS[num % BASE] + id_str
-            num //= BASE
-        # Pad with leading zeros if necessary
-        return id_str.zfill(7)
-
-    def _generate(self):
-        """Old version"""
-        with self.lock:
-            self.counter += 1
-            id_num = self.counter
-            self._save_counter(id_num)
-
-        # Convert the counter to a base-32 string
-        id_str = ""
-        while id_num:
-            id_str = ID_CHARACTERS[id_num % BASE] + id_str
-            id_num //= BASE
-
-        # Pad with leading zeros if necessary
-        return id_str.zfill(7)
 
     def generate(self):
         """Generates a unique 7-character ID"""

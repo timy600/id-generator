@@ -141,3 +141,7 @@ cython_debug/
 client_ids.db
 *.db
 id_counter.txt
+tests/counters/
+tests/counters/token_generation_counter.txt
+tests/counters/token_performance_counter.txt
+tests/counters/token_restarting_counter.txt

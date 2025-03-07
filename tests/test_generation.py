@@ -3,7 +3,7 @@
 import re
 import pytest
 from concurrent.futures import ThreadPoolExecutor
-from identity.generation import generate, generate_bulk, IDGenerator
+from identity.generation import IDGenerator
 from identity.constants import ID_CHARACTERS
 
 format_check = re.compile("^[" + ID_CHARACTERS + "]{7}$")
@@ -11,11 +11,10 @@ format_check = re.compile("^[" + ID_CHARACTERS + "]{7}$")
 
 @pytest.fixture
 def id_gen():
-    return IDGenerator()
+    return IDGenerator(filename="tests/counters/token_generation_counter.txt")
 
 
 def test_id_is_the_correct_length(id_gen):
-    assert len(generate()) == 7
     assert len(id_gen.generate()) == 7
 
 
