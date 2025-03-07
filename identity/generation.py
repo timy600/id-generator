@@ -14,11 +14,7 @@ def generate():
 
 def generate_bulk(n=1):
     """Generates 'n' unique IDs efficiently"""
-    new_ids = set()
-    while len(new_ids) < n:
-        new_id = generate()
-        new_ids.add(new_id)
-    return list(new_ids)
+    return [generate() for _ in range(n)]
 
 
 class IDGenerator:
@@ -64,12 +60,22 @@ class IDGenerator:
         return itertools.count(start)
     
     def _base34_encode(self, num):
+        # performance: 76.97s, 77.15s, 93.02s, 94.02s, 88.63s
         """Encodes number into base34 (A-Z, 0-9, excluding I and O)"""
         res = []
         while num:
             num, remainder = divmod(num, BASE)
             res.append(ID_CHARACTERS[remainder])
         return ''.join(res[::-1]).zfill(7)
+
+    def _base34_encode_str(self, num):
+        # performance: 78.82s, 99.52s, 96.21s
+        id_str = ''
+        while num:
+            id_str = ID_CHARACTERS[num % BASE] + id_str
+            num //= BASE
+        # Pad with leading zeros if necessary
+        return id_str.zfill(7)
 
     def _generate(self):
         """Old version"""
@@ -86,7 +92,7 @@ class IDGenerator:
 
         # Pad with leading zeros if necessary
         return id_str.zfill(7)
-    
+
     def generate(self):
         """Generates a unique 7-character ID"""
         try:
@@ -95,13 +101,9 @@ class IDGenerator:
             self.local_counter = self._allocate_batch()
             id_num = next(self.local_counter)
         
-        return self._base34_encode(id_num)        
-     
+        return self._base34_encode(id_num)
+    
 
     def generate_bulk(self, n=1):
         """Generates 'n' unique IDs efficiently"""
-        new_ids = set()
-        while len(new_ids) < n:
-            new_id = self.generate()
-            new_ids.add(new_id)
-        return list(new_ids)
+        return [self.generate() for _ in range(n)]
