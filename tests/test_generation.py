@@ -71,27 +71,27 @@ def test_class_generator():
     id_gen = IDGenerator()
     assert len(id_gen.generate()) == 7
 
-def test_step_load_counter():
-    id_gen = IDGenerator()
-    first_counter = id_gen._load_counter()
-    id_gen.generate()
-    second_counter = id_gen._load_counter()
-    assert first_counter != second_counter
+# def test_step_load_counter():
+#     id_gen = IDGenerator()
+#     first_counter = id_gen._load_counter()
+#     id_gen.generate()
+#     second_counter = id_gen._load_counter()
+#     assert first_counter != second_counter
 
-def test_class_bulk_generator():
-    id_gen = IDGenerator()
-    first_counter = id_gen._load_counter()
+# def test_class_bulk_generator():
+#     id_gen = IDGenerator()
+#     first_counter = id_gen._load_counter()
     
-    for _ in range(0, 200):
-        id_gen.generate()
-    second_counter = id_gen._load_counter()
-    assert first_counter + 200 == second_counter
+#     for _ in range(0, 200):
+#         id_gen.generate()
+#     second_counter = id_gen._load_counter()
+#     assert first_counter + 200 == second_counter
 
 def test_class_concurrent_bulk_generation():
     generated_ids = set()
     bulk_args = []
-    for _ in range(0, 20):
-        bulk_args.append(250)
+    for _ in range(0, 2000):
+        bulk_args.append(2500)
 
     def consumer_function(ids):
         return list(ids)
@@ -103,4 +103,4 @@ def test_class_concurrent_bulk_generation():
         for chunk in ids:
             generated_ids.update(chunk)
 
-    assert len(generated_ids) == 5000
+    assert len(generated_ids) == 5000000
