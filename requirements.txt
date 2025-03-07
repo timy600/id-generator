@@ -2,3 +2,6 @@ pytest
 pytest-timeout
 futures
 mock
+coverage
+black
+pylint

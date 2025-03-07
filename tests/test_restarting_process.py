@@ -9,23 +9,26 @@ import pytest
 def test_restarting_process_does_not_duplicate_ids():
     ids = set()
     env = os.environ.copy()
-    env['PYTHONPATH'] = os.getcwd() + (';' if sys.platform == 'win32' else ':') + env.get('PYTHONPATH', '')
+    env["PYTHONPATH"] = (
+        os.getcwd()
+        + (";" if sys.platform == "win32" else ":")
+        + env.get("PYTHONPATH", "")
+    )
 
     # Define the command based on the operating system
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         # Windows
         python_command = "python"
     else:
         # Unix-like systems (Linux, macOS)
         python_command = "/usr/bin/env python"
-    
-    #env['PYTHONPATH'] = os.getcwd() + ':' + env.get('PYTHONPATH', '') #linux
+
+    # env['PYTHONPATH'] = os.getcwd() + ':' + env.get('PYTHONPATH', '') #linux
     generate_script_path = os.path.join("scripts", "generate.py")
 
     process = subprocess.Popen(
-        [python_command, "-u", generate_script_path],
-        stdout=subprocess.PIPE,
-        env=env)
+        [python_command, "-u", generate_script_path], stdout=subprocess.PIPE, env=env
+    )
     time.sleep(2)
     process.kill()
     for incoming_id in process.stdout.readlines():
@@ -33,9 +36,8 @@ def test_restarting_process_does_not_duplicate_ids():
         ids.add(incoming_id)
 
     process = subprocess.Popen(
-        [python_command, "-u", generate_script_path],
-        stdout=subprocess.PIPE,
-        env=env)
+        [python_command, "-u", generate_script_path], stdout=subprocess.PIPE, env=env
+    )
     time.sleep(2)
     process.kill()
     for incoming_id in process.stdout.readlines():

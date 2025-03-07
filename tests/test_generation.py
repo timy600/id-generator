@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from identity.generation import generate, generate_bulk, IDGenerator
 from identity.constants import ID_CHARACTERS
 
-format_check = re.compile('^[' + ID_CHARACTERS + ']{7}$')
+format_check = re.compile("^[" + ID_CHARACTERS + "]{7}$")
 
 
 @pytest.fixture
@@ -67,4 +67,4 @@ def test_concurrent_bulk_generation(id_gen):
         for chunk in ids:
             generated_ids.update(chunk)
 
-    assert len(generated_ids) == 500000 #5000000
+    assert len(generated_ids) == 500000  # 5000000

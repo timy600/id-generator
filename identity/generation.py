@@ -12,18 +12,19 @@ def generate():
     return "".join(random.choices(ID_CHARACTERS, k=7))
 
 
-def generate_bulk(n=1):
+def generate_bulk(num=1):
     """Generates 'n' unique IDs efficiently"""
-    return [generate() for _ in range(n)]
+    return [generate() for _ in range(num)]
 
 
 class IDGenerator:
-    def __init__(self, filename='id_counter.txt', batch_size=1000):
+    def __init__(self, filename="id_counter.txt", batch_size=1000):
         self.filename = filename
         self.batch_size = batch_size  # Preallocated batch size
         self.lock = threading.Lock()
         self.counter = self._load_counter()
         self.local_counter = itertools.count(self.counter)  # Thread-local batch counter
+
     # def __init__(self, filename='id_counter.txt'):
     #     self.filename = filename
     #     self.lock = threading.Lock()
@@ -31,7 +32,7 @@ class IDGenerator:
 
     def _load_counter(self):
         try:
-            with open(self.filename, 'r') as file:
+            with open(self.filename, "r", encoding="utf-8") as file:
                 return int(file.read().strip())
         except FileNotFoundError:
             return 0
@@ -48,7 +49,7 @@ class IDGenerator:
 
     def _save_counter(self, value):
         """Saves the last allocated counter to the file"""
-        with open(self.filename, 'w') as file:
+        with open(self.filename, "w", encoding="utf-8") as file:
             file.write(str(value))
 
     def _allocate_batch(self):
@@ -58,7 +59,7 @@ class IDGenerator:
             self.counter += self.batch_size  # Allocate next batch
             self._save_counter(self.counter)  # Persist only after batch allocation
         return itertools.count(start)
-    
+
     def _base34_encode(self, num):
         # performance: 76.97s, 77.15s, 93.02s, 94.02s, 88.63s
         """Encodes number into base34 (A-Z, 0-9, excluding I and O)"""
@@ -66,11 +67,11 @@ class IDGenerator:
         while num:
             num, remainder = divmod(num, BASE)
             res.append(ID_CHARACTERS[remainder])
-        return ''.join(res[::-1]).zfill(7)
+        return "".join(res[::-1]).zfill(7)
 
     def _base34_encode_str(self, num):
         # performance: 78.82s, 99.52s, 96.21s
-        id_str = ''
+        id_str = ""
         while num:
             id_str = ID_CHARACTERS[num % BASE] + id_str
             num //= BASE
@@ -82,10 +83,10 @@ class IDGenerator:
         with self.lock:
             self.counter += 1
             id_num = self.counter
-            self._save_counter()
+            self._save_counter(id_num)
 
         # Convert the counter to a base-32 string
-        id_str = ''
+        id_str = ""
         while id_num:
             id_str = ID_CHARACTERS[id_num % BASE] + id_str
             id_num //= BASE
@@ -100,10 +101,9 @@ class IDGenerator:
         except StopIteration:
             self.local_counter = self._allocate_batch()
             id_num = next(self.local_counter)
-        
-        return self._base34_encode(id_num)
-    
 
-    def generate_bulk(self, n=1):
+        return self._base34_encode(id_num)
+
+    def generate_bulk(self, num=1):
         """Generates 'n' unique IDs efficiently"""
-        return [self.generate() for _ in range(n)]
+        return [self.generate() for _ in range(num)]
