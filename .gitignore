@@ -140,3 +140,4 @@ cython_debug/
 # SQLite Database
 client_ids.db
 *.db
+id_counter.txt

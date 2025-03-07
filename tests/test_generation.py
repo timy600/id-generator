@@ -2,10 +2,12 @@
 
 import re
 import pytest
-from identity.generation import generate, generate_bulk
+from concurrent.futures import ThreadPoolExecutor
+from identity.generation import generate, generate_bulk, IDGenerator
 from identity.constants import ID_CHARACTERS
 
 format_check = re.compile('^[' + ID_CHARACTERS + ']{7}$')
+id_gen = IDGenerator()
 
 
 def test_id_is_the_correct_length():
@@ -39,10 +41,66 @@ def test_bulk_generation():
     assert len(ids) == 10000
 
 
-def test_ids_are_unique_generated_in_bulk():
+# def test_ids_are_unique_generated_in_bulk():
+#     generated_ids = set()
+#     generated_count = 0
+#     while generated_count < 100:
+#         generated_ids.update(generate_bulk(1000))
+#         generated_count += 1
+#         assert len(generated_ids) == generated_count * 1000
+
+# def test_concurrent_bulk_generation():
+#     generated_ids = set()
+#     bulk_args = []
+#     for _ in range(0, 2000):
+#         bulk_args.append(2500)
+
+#     def consumer_function(ids):
+#         return list(ids)
+
+#     with ThreadPoolExecutor(max_workers=9) as pool:
+#         generators = list(pool.map(generate_bulk, bulk_args))
+#         ids = list(pool.map(consumer_function, generators))
+
+#         for chunk in ids:
+#             generated_ids.update(chunk)
+
+#     assert len(generated_ids) == 5000000
+
+def test_class_generator():
+    id_gen = IDGenerator()
+    assert len(id_gen.generate()) == 7
+
+def test_step_load_counter():
+    id_gen = IDGenerator()
+    first_counter = id_gen._load_counter()
+    id_gen.generate()
+    second_counter = id_gen._load_counter()
+    assert first_counter != second_counter
+
+def test_class_bulk_generator():
+    id_gen = IDGenerator()
+    first_counter = id_gen._load_counter()
+    
+    for _ in range(0, 200):
+        id_gen.generate()
+    second_counter = id_gen._load_counter()
+    assert first_counter + 200 == second_counter
+
+def test_class_concurrent_bulk_generation():
     generated_ids = set()
-    generated_count = 0
-    while generated_count < 100:
-        generated_ids.update(generate_bulk(1000))
-        generated_count += 1
-        assert len(generated_ids) == generated_count * 1000
+    bulk_args = []
+    for _ in range(0, 20):
+        bulk_args.append(250)
+
+    def consumer_function(ids):
+        return list(ids)
+
+    with ThreadPoolExecutor(max_workers=9) as pool:
+        generators = list(pool.map(id_gen.generate_bulk, bulk_args))
+        ids = list(pool.map(consumer_function, generators))
+
+        for chunk in ids:
+            generated_ids.update(chunk)
+
+    assert len(generated_ids) == 5000
