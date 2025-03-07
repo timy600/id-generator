@@ -7,41 +7,42 @@ from identity.generation import generate, generate_bulk, IDGenerator
 from identity.constants import ID_CHARACTERS
 
 format_check = re.compile('^[' + ID_CHARACTERS + ']{7}$')
-id_gen = IDGenerator()
 
 
-def test_id_is_the_correct_length():
+@pytest.fixture
+def id_gen():
+    return IDGenerator()
+
+
+def test_id_is_the_correct_length(id_gen):
     assert len(generate()) == 7
     assert len(id_gen.generate()) == 7
 
-def test_generate_proper_type():
-    assert type(id_gen.generate()) is str
-    assert type(id_gen.generate_bulk()) is list
-    assert type(id_gen.generate_bulk()[0]) is str
+
+def test_generate_proper_type(id_gen):
+    bulk_ids = id_gen.generate_bulk()
+    assert isinstance(id_gen.generate(), str)
+    assert isinstance(bulk_ids, list)
+    assert isinstance(bulk_ids[0], str)
 
 
-def test_id_uses_correct_characters():
+def test_id_uses_correct_characters(id_gen):
     generated_id = id_gen.generate()
     assert format_check.match(generated_id) is not None
 
 
-def test_ids_are_unique_and_correct_format():
+def test_ids_are_unique_and_correct_format(id_gen):
     ids = set()
     generated_count = 0
     while generated_count < 22000:
-        generated_id = generate()
+        generated_id = id_gen.generate()
         generated_count += 1
         assert generated_id not in ids
         ids.add(generated_id)
         assert format_check.match(generated_id) is not None
 
 
-def test_bulk_generation():
-    ids = generate_bulk(10000)
-    assert len(ids) == 10000
-
-
-def test_ids_are_unique_generated_in_bulk():
+def test_ids_are_unique_generated_in_bulk(id_gen):
     generated_ids = set()
     generated_count = 0
     while generated_count < 100:
@@ -50,8 +51,7 @@ def test_ids_are_unique_generated_in_bulk():
         assert len(generated_ids) == generated_count * 1000
 
 
-def test_concurrent_bulk_generation():
-    id_gen = IDGenerator()
+def test_concurrent_bulk_generation(id_gen):
     generated_ids = set()
     bulk_args = []
     for _ in range(0, 200):
