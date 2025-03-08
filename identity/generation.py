@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
-import random
 import threading
 import itertools
+import time
 import atexit
-
+from pprint import pprint
 from .constants import ID_CHARACTERS
 
 
@@ -23,12 +21,12 @@ class IDGenerator:
         self.counter = self._load_counter()
         self.local_counter = itertools.count(self.counter)  # Thread-local batch counter
 
-        atexit.register(self._save_counter_on_exit)
-    
+        atexit.register(self._save_counter_on_exit)  # Register the cleanup function
+
     def _save_counter_on_exit(self):
         """Ensures the counter is saved when the program exits."""
         with self.lock:
-            self._save_counter(next(self.local_counter))  # Save the latest counter
+            self._save_counter(int(next(self.local_counter)))  # Save the latest counter
 
     def _load_counter(self):
         try:
@@ -72,8 +70,12 @@ class IDGenerator:
             self.local_counter = self._allocate_batch()
             id_num = next(self.local_counter)
 
+        if id_num % self.batch_size == 0:
+            self._save_counter(id_num)
         return self._base34_encode(id_num)
 
     def generate_bulk(self, num=1):
-        """Generates 'n' unique IDs efficiently"""
-        return [self.generate() for _ in range(num)]
+        """Generates 'n' unique IDs efficiently"""        
+        ids = [self.generate() for _ in range(num)]
+        self._save_counter(next(self.local_counter))
+        return ids

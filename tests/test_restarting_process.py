@@ -7,23 +7,19 @@ import pytest
 
 
 def test_restarting_process_does_not_duplicate_ids():
+    # filename = "tests/counters/token_restarting_counter.txt"
+    # with open(filename, "w", encoding="utf-8") as file:
+    #     file.write("0")
     ids = set()
     env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
     env["PYTHONPATH"] = (
         os.getcwd()
         + (";" if sys.platform == "win32" else ":")
         + env.get("PYTHONPATH", "")
     )
 
-    # Define the command based on the operating system
-    if sys.platform == "win32":
-        # Windows
-        python_command = "python"
-    else:
-        # Unix-like systems (Linux, macOS)
-        python_command = "/usr/bin/env python"
-
-    # env['PYTHONPATH'] = os.getcwd() + ':' + env.get('PYTHONPATH', '') #linux
+    python_command = "python" if sys.platform == "win32" else "/usr/bin/env python"
     generate_script_path = os.path.join("scripts", "generate.py")
 
     process = subprocess.Popen(

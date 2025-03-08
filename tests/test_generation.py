@@ -7,14 +7,17 @@ from identity.generation import IDGenerator
 from identity.constants import ID_CHARACTERS
 
 format_check = re.compile("^[" + ID_CHARACTERS + "]{7}$")
-
+filename = "tests/counters/token_generation_counter.txt"
 
 @pytest.fixture
 def id_gen():
-    return IDGenerator(filename="tests/counters/token_generation_counter.txt")
+    return IDGenerator(filename=filename)
 
 
 def test_id_is_the_correct_length(id_gen):
+    with open(filename, "w", encoding="utf-8") as file:
+        file.write("0")
+
     assert len(id_gen.generate()) == 7
 
 
