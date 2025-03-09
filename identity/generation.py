@@ -8,12 +8,12 @@ from .constants import ID_CHARACTERS, RegexFormator
 
 class IDGenerator:
     def __init__(
-            self,
-            filename="id_counter.txt",
-            batch_size=1000,
-            id_characters=ID_CHARACTERS,
-            filename_length="identity/id_length.txt",
-        ):
+        self,
+        filename="id_counter.txt",
+        batch_size=1000,
+        id_characters=ID_CHARACTERS,
+        filename_length="identity/id_length.txt",
+    ):
         self.id_characters = id_characters
         self.encoding_base = len(id_characters)
         self.filename = filename
@@ -24,7 +24,7 @@ class IDGenerator:
         self.alerts = []  # Store alert messages
 
         self.regex_formator = RegexFormator(filename_length=filename_length)
-        self.id_length = self.regex_formator.load_length() # length starts at 7
+        self.id_length = self.regex_formator.load_length()  # length starts at 7
         self.max_ids = self.encoding_base**self.id_length - 1
 
         atexit.register(self._save_counter_on_exit)  # Register the cleanup function
@@ -76,7 +76,7 @@ class IDGenerator:
         while num:
             num, remainder = divmod(num, self.encoding_base)
             res.append(self.id_characters[remainder])
-        return "".join(res[::-1]).zfill(self.id_length) # default 7
+        return "".join(res[::-1]).zfill(self.id_length)  # default 7
 
     def generate(self):
         """Generates a unique 7-character ID"""
@@ -86,7 +86,7 @@ class IDGenerator:
             self.local_counter = self._allocate_batch()
             id_num = next(self.local_counter)
 
-        if id_num == int(self.max_ids*0.9):
+        if id_num == int(self.max_ids * 0.9):
             self._send_alert("Approaching ID limit")
 
         if id_num % self.batch_size == 0:
@@ -100,9 +100,8 @@ class IDGenerator:
             self._expend_length_id()
         return new_id
 
-
     def generate_bulk(self, num=1):
-        """Generates 'n' unique IDs efficiently"""        
+        """Generates 'n' unique IDs efficiently"""
         ids = [self.generate() for _ in range(num)]
         self._save_counter(next(self.local_counter))
         return ids

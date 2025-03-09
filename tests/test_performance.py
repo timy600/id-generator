@@ -18,14 +18,11 @@ def test_generate_bulk_performance():
     with open(filename, "w", encoding="utf-8") as file:
         file.write("0")
 
-    id_gen = IDGenerator(
-        id_characters=ID_CHARACTERS,
-        filename=filename
-        )
+    id_gen = IDGenerator(id_characters=ID_CHARACTERS, filename=filename)
 
     def bulk_generate(_):
         return id_gen.generate_bulk(209710)
-    
+
     with ThreadPoolExecutor(max_workers=5) as executor:
         results = list(executor.map(bulk_generate, range(5)))
 
@@ -45,15 +42,14 @@ def test_alert_90_percent():
 
     # Set the counter to 1887432, a bit before 90% of the max IDs
     with open(filename, "w", encoding="utf-8") as file:
-        file.write(str(int(limit_90)-4))
+        file.write(str(int(limit_90) - 4))
 
-    id_gen = IDGenerator(
-        id_characters=ID_CHARACTERS,
-        filename=filename
-    )
+    id_gen = IDGenerator(id_characters=ID_CHARACTERS, filename=filename)
 
     def bulk_generate(_):
-        return [id_gen.generate() for _ in range(3)] # just enougth to pass the 90% mark
+        return [
+            id_gen.generate() for _ in range(3)
+        ]  # just enougth to pass the 90% mark
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
         results = list(executor.map(bulk_generate, range(workers)))
@@ -69,7 +65,6 @@ def test_alert_90_percent():
     # assert "Approaching ID limit" not in id_gen.alerts
 
 
-
 @pytest.mark.timeout(6000)
 def test_reaching_limit():
     encoding_base = len(ID_CHARACTERS)
@@ -79,16 +74,14 @@ def test_reaching_limit():
 
     # Set the counter to 1887432, a bit before 90% of the max IDs
     with open(filename, "w", encoding="utf-8") as file:
-        file.write(str(int(limit)-4))
-    filename_length="identity/testing_id_length.txt"
+        file.write(str(int(limit) - 4))
+    filename_length = "identity/testing_id_length.txt"
     id_gen = IDGenerator(
-        id_characters=ID_CHARACTERS,
-        filename=filename,
-        filename_length=filename_length
+        id_characters=ID_CHARACTERS, filename=filename, filename_length=filename_length
     )
 
     def bulk_generate(_):
-        return [id_gen.generate() for _ in range(3)] # just enougth to pass the limit
+        return [id_gen.generate() for _ in range(3)]  # just enougth to pass the limit
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
         results = list(executor.map(bulk_generate, range(workers)))

@@ -9,6 +9,7 @@ from identity.constants import ID_CHARACTERS
 format_check = re.compile("^[" + ID_CHARACTERS + "]{7}$")
 filename = "tests/counters/token_generation_counter.txt"
 
+
 @pytest.fixture
 def id_gen():
     return IDGenerator(filename=filename)
