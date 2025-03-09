@@ -34,7 +34,20 @@ This prevents ID duplication upon restarts.
 
 ### **5. Performance Considerations**
 - A simplified 8-letter base encoding was used for performance testing.
-- The counter was managed in a way that minimized I/O overhead.
+- The counter was managed in a way that minimized I/O overhead, with batch of 1000 IDs before rewriting.
+
+### **6. Approaching the end of the Sequence**
+When hitting the last decile of the possible permutations, an alert-message is sent.
+
+### **7. Reaching the end of the Sequence**
+I implemented a separate class for handling the sequence exhaustion by adding the possible letters, among them the I and O missing from the original 34 base encoding.
+```python
+ID_CHARACTERS_EXTRA = "IOÀÈÉÔÖ"
+```
+
+### **8. Separate IRL counter from testings**
+The unit tests are setup with their own counter so that it wouldnt affect the real life service usage.
+
 
 ## Key Challenges & Insights
 1. **Random Generation Pitfalls:**
