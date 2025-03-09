@@ -15,13 +15,20 @@ class IDGenerator:
         ):
         self.id_characters = id_characters
         self.encoding_base = len(id_characters)
+        self.id_length = 7 # length starts at 7
+        self.max_ids = self.encoding_base**self.id_length - 1
         self.filename = filename
         self.batch_size = batch_size  # Preallocated batch size
         self.lock = threading.Lock()
         self.counter = self._load_counter()
         self.local_counter = itertools.count(self.counter)  # Thread-local batch counter
+        self.alerts = []  # Store alert messages
 
         atexit.register(self._save_counter_on_exit)  # Register the cleanup function
+
+        # Check if the current counter is approaching the limit
+        if self.counter > 0.9 * self.max_ids:
+            self._send_alert("Approaching ID limit")
 
     def _save_counter_on_exit(self):
         """Ensures the counter is saved when the program exits."""
@@ -32,7 +39,7 @@ class IDGenerator:
         try:
             with open(self.filename, "r", encoding="utf-8") as file:
                 return int(file.read().strip())
-        except FileNotFoundError:
+        except (FileNotFoundError, ValueError):
             return 0
 
     def _save_counter(self, value):
@@ -42,7 +49,6 @@ class IDGenerator:
                 file.write(str(value))
                 # return int(file.read().strip())
         except FileNotFoundError:
-            # return 1_000_000  # Start from a high number to ensure 7-char length
             raise FileNotFoundError
 
     def _allocate_batch(self):
@@ -60,7 +66,7 @@ class IDGenerator:
         while num:
             num, remainder = divmod(num, self.encoding_base)
             res.append(self.id_characters[remainder])
-        return "".join(res[::-1]).zfill(7)
+        return "".join(res[::-1]).zfill(self.id_length) # 7
 
     def generate(self):
         """Generates a unique 7-character ID"""
@@ -70,8 +76,12 @@ class IDGenerator:
             self.local_counter = self._allocate_batch()
             id_num = next(self.local_counter)
 
+        if id_num == int(self.max_ids*0.9):
+            self._send_alert("Approaching ID limit")
+
         if id_num % self.batch_size == 0:
             self._save_counter(id_num)
+        print(f"[DEBUG] id_num: {id_num}")
         return self._base34_encode(id_num)
 
     def generate_bulk(self, num=1):
@@ -79,3 +89,9 @@ class IDGenerator:
         ids = [self.generate() for _ in range(num)]
         self._save_counter(next(self.local_counter))
         return ids
+
+    def _send_alert(self, message):
+        # Send an alert when reaching the last decile
+        """Send an alert or log a warning"""
+        self.alerts.append(message)
+        print(f"ALERT: {message}")
