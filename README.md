@@ -51,12 +51,12 @@ The unit tests are setup with their own counter so that it wouldnt affect the re
 
 ## Key Challenges & Insights
 1. **Random Generation Pitfalls:**
-   - Despite the high theoretical number of permutations (~27 billion), testing bulk generation (2 million samples) resulted in duplicate occurrences much more frequently than expected.
+   - Despite the high theoretical number of permutations (~52 billion), testing bulk generation (2 million samples) resulted in duplicate occurrences much more frequently than expected.
    - Probability calculations confirmed the issue:
    ```python
    proba_not_one_turn = 1 - 1/permutations
    proba_at_least_once_in_x_turn = 1 - (proba_not_one_turn)**1_000_000
-   print(proba_at_least_once_in_x_turn)  # ~0.00004
+   print(proba_at_least_once_in_x_turn)  # ~0.00002
    ```
    - This reduced confidence in a purely random approach.
 

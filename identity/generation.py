@@ -3,7 +3,7 @@ import itertools
 import time
 import atexit
 from pprint import pprint
-from .constants import ID_CHARACTERS
+from .constants import ID_CHARACTERS, RegexFormator
 
 
 class IDGenerator:
@@ -11,18 +11,21 @@ class IDGenerator:
             self,
             filename="id_counter.txt",
             batch_size=1000,
-            id_characters=ID_CHARACTERS
+            id_characters=ID_CHARACTERS,
+            filename_length="identity/id_length.txt",
         ):
         self.id_characters = id_characters
         self.encoding_base = len(id_characters)
-        self.id_length = 7 # length starts at 7
-        self.max_ids = self.encoding_base**self.id_length - 1
         self.filename = filename
         self.batch_size = batch_size  # Preallocated batch size
         self.lock = threading.Lock()
         self.counter = self._load_counter()
         self.local_counter = itertools.count(self.counter)  # Thread-local batch counter
         self.alerts = []  # Store alert messages
+
+        self.regex_formator = RegexFormator(filename_length=filename_length)
+        self.id_length = self.regex_formator.load_length() # length starts at 7
+        self.max_ids = self.encoding_base**self.id_length - 1
 
         atexit.register(self._save_counter_on_exit)  # Register the cleanup function
 
@@ -59,6 +62,13 @@ class IDGenerator:
             self._save_counter(self.counter)  # Persist only after batch allocation
         return itertools.count(start)
 
+    def _expend_length_id(self):
+        """Increase the length of the IDs"""
+        self.id_length += 1
+        self.regex_formator.update_length(self.id_length)
+        self.max_ids = self.encoding_base**self.id_length - 1
+        self.current_counter = 0  # Reset the counter
+
     def _base34_encode(self, num):
         # performance: 76.97s, 77.15s, 93.02s, 94.02s, 88.63s
         """Encodes number into base34 (A-Z, 0-9, excluding I and O)"""
@@ -66,7 +76,7 @@ class IDGenerator:
         while num:
             num, remainder = divmod(num, self.encoding_base)
             res.append(self.id_characters[remainder])
-        return "".join(res[::-1]).zfill(self.id_length) # 7
+        return "".join(res[::-1]).zfill(self.id_length) # default 7
 
     def generate(self):
         """Generates a unique 7-character ID"""
@@ -82,7 +92,14 @@ class IDGenerator:
         if id_num % self.batch_size == 0:
             self._save_counter(id_num)
         print(f"[DEBUG] id_num: {id_num}")
-        return self._base34_encode(id_num)
+        new_id = self._base34_encode(id_num)
+
+        if id_num == int(self.max_ids):
+            print(f"[DEBUG] EXPEND!!! id_num: {id_num}")
+            self._send_alert("Expending the length of ID")
+            self._expend_length_id()
+        return new_id
+
 
     def generate_bulk(self, num=1):
         """Generates 'n' unique IDs efficiently"""        

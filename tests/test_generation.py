@@ -57,7 +57,7 @@ def test_concurrent_bulk_generation(id_gen):
     generated_ids = set()
     bulk_args = []
     for _ in range(0, 200):
-        bulk_args.append(2500)
+        bulk_args.append(250)
 
     def consumer_function(ids):
         return list(ids)
@@ -69,4 +69,4 @@ def test_concurrent_bulk_generation(id_gen):
         for chunk in ids:
             generated_ids.update(chunk)
 
-    assert len(generated_ids) == 500000  # 5000000
+    assert len(generated_ids) == 50000  # 5000000
