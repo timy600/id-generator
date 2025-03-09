@@ -40,10 +40,7 @@ This prevents ID duplication upon restarts.
 When hitting the last decile of the possible permutations, an alert-message is sent.
 
 ### **7. Reaching the end of the Sequence**
-I implemented a separate class for handling the sequence exhaustion by adding the possible letters, among them the I and O missing from the original 34 base encoding.
-```python
-ID_CHARACTERS_EXTRA = "IOÀÈÉÔÖ"
-```
+I implemented a separate class for handling the sequence exhaustion by changing the length of the ID. I keep it appart so we keep the consistency.
 
 ### **8. Separate IRL counter from testings**
 The unit tests are setup with their own counter so that it wouldnt affect the real life service usage.
@@ -70,7 +67,7 @@ The unit tests are setup with their own counter so that it wouldnt affect the re
    - Two options were considered:
      1. Extending the length of the ID.
      2. Expanding the character set.
-   - The second option was chosen and implemented as a separate class to maintain a clear distinction between configuration and generation logic.
+   - The second option was chosen first before backing up and going for the other :) and implemented as a separate class to maintain a clear distinction between configuration and generation logic.
 
 ## Conclusion
 The final solution provides a robust and efficient approach to ID generation, balancing uniqueness, performance, and fault tolerance. The class-based architecture ensures modularity, making it adaptable to different testing scenarios and production use cases.
