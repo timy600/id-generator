@@ -65,3 +65,22 @@ def test_restarting_process_does_not_duplicate_ids():
 
     # Ensure that at least two unique IDs were generated
     assert len(ids) > 1
+
+def test_reset_values():
+    filenames = [
+        "tests/counters/token_generation_counter.txt",
+        "tests/counters/token_performance_counter.txt",
+        "tests/counters/token_restarting_counter.txt"
+    ]
+    for filename in filenames:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write("0")
+    for filename in filenames:
+        with open(filename, "r", encoding="utf-8") as file:
+            assert int(file.read()) == 0
+
+    length_filename = "identity/testing_id_length.txt"
+    with open(length_filename, "w", encoding="utf-8") as file:
+        file.write("7")
+    with open(length_filename, "r", encoding="utf-8") as file:
+        assert int(file.read()) == 7
