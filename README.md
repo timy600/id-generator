@@ -1,74 +1,64 @@
-# Identity Service
 
-FX Labs has many different systems generating currency trades.
-So that our clients can easily look up individual trades, we
-want to assign each trade its unique 7-character alphanumeric
-human-readable ID.
+# Identity Service - Proposed Solution
 
-Example: B762F00
+## Overview
+This document outlines the proposed solution for the Identity Service, which generates human-readable 7-letter IDs using a set of 34 characters (digits and alphabets excluding 'I' and 'O'). The service was designed to handle bulk generation, concurrency, persistence, fault tolerance, and performance considerations.
 
-An API will use this package to create new unique IDs on demand.
+## Solution Approach
+Three potential approaches were considered for generating unique IDs:
 
-## Setup
+1. **Pure Randomness:** Using `random.choices()` to generate IDs randomly.
+2. **SQLite Database:** Storing generated IDs in a database to ensure uniqueness.
+3. **Sequential with a Counter:** Maintaining a counter to generate sequential unique IDs.
 
-You will need a Python environment with the package requirements
-installed.
+After analysis, the sequential counter approach was chosen, implemented in a hybrid system leveraging batching and threading to optimize efficiency.
 
-To set this up using `virtualenv`, run:
+## Implementation Details
 
+### **1. Class-Based Design**
+The ID generation logic was encapsulated within the `IDGenerator` class. This design allows configurability based on the specific use case, such as performance testing, crash recovery, and real-world counter implementation.
+
+### **2. Handling Bulk Generation**
+The bulk generation function was tested and optimized to ensure uniqueness and efficient formatting.
+
+### **3. Concurrency Handling**
+The solution was designed to handle multiple concurrent requests using threading, ensuring thread safety while maintaining performance.
+
+### **4. Persistence and Fault Tolerance**
+The service ensures persistence by saving the counter state upon exit using:
+```python
+import atexit
+atexit.register(self._save_counter_on_exit)
 ```
-$ virtualenv -p python3 venv
-$ source venv/bin/activate
-$ pip3 install -r requirements.txt
-```
+This prevents ID duplication upon restarts.
 
-You can run the tests with:
+### **5. Performance Considerations**
+- A simplified 8-letter base encoding was used for performance testing.
+- The counter was managed in a way that minimized I/O overhead.
 
-```
-$ python -m pytest
-```
+## Key Challenges & Insights
+1. **Random Generation Pitfalls:**
+   - Despite the high theoretical number of permutations (~27 billion), testing bulk generation (2 million samples) resulted in duplicate occurrences much more frequently than expected.
+   - Probability calculations confirmed the issue:
+   ```python
+   proba_not_one_turn = 1 - 1/permutations
+   proba_at_least_once_in_x_turn = 1 - (proba_not_one_turn)**1_000_000
+   print(proba_at_least_once_in_x_turn)  # ~0.00004
+   ```
+   - This reduced confidence in a purely random approach.
 
-## Task
+2. **SQLite Performance Issues:**
+   - Initial attempts at using an SQLite database were abandoned due to significant performance overhead.
 
-This repo contains tests for code to generate the IDs using the functions provided inside the `identity/generation.py` file as an entry point. Your challenge is completing the code, not limited to that specific script or functions.
+3. **Crashing Test Failures:**
+   - Early versions of the implementation failed the crash recovery tests. After revisiting the counter-based approach, a persistent save mechanism was implemented, which resolved the issue.
 
-You can merge one branch at a time into the `python-test` branch, run the test suite, improve your solution and commit the changes before merging the next one. 
+4. **Handling Sequence Exhaustion:**
+   - Two options were considered:
+     1. Extending the length of the ID.
+     2. Expanding the character set.
+   - The second option was chosen and implemented as a separate class to maintain a clear distinction between configuration and generation logic.
 
-The branches are:
+## Conclusion
+The final solution provides a robust and efficient approach to ID generation, balancing uniqueness, performance, and fault tolerance. The class-based architecture ensures modularity, making it adaptable to different testing scenarios and production use cases.
 
-1. `origin/python-bulk-generation` - adds tests for a bulk generation function
-to generate many IDs at once, and improves the uniqueness and formatting
-tests.
-
-1. `origin/python-concurrency` - tests that the code can handle many concurrent
-requests in a multithreaded environment.
-
-1. `origin/python-persistence-and-fault-tolerance` - tests that the code can
-recover from crashes and restarts without duplicating IDs.
-
-1. `origin/python-performance` - tests the code performance.
-
-**Important:** the tests above are there to guide you through the requirements and are not exhaustive - think about how you would solve this problem in a real-life scenario.
-
-Finally, once you have finished, please create a git bundle to send back to
-us with this command:
-
-```
-$ git bundle create repo.bundle --all
-```
-
-Good luck!
-
-## FAQ
-
-**1. Can I use external libraries or dependencies?** Yes, you can! However, ensure that you can help us quickly set up the environment to run your solution.
-
-**2. Can I add more tests to the test suite?** Actually, you shouldn't rely only on the tests we provide but do look at them to understand what might be important. Feel comfortable adding/improving the tests that are there.
-
-**3. I quickly solved the problem in a few minutes; what is happening?** The chances you are not carefully looking at the problem are high, even if all the tests pass. Remember to exercise the solution in terms of production readiness, concurrency, performance, and fault tolerance.
-
-**4. How much time do I have to solve the problem?** It may take a few hours to implement your solution, but perhaps spread over a number of days. The faster we receive the solution, the faster we can review it and schedule the next step - it will be perfect not to take more than two days.
-
-**5. Should I use the less possible code to solve the problem?** You should follow the Python language's clean code practices and conventions. Other people will review your code, so the readability of the code will be evaluated by design.
-
-**6. I have multiple solutions. Should I send all of them to you?** We discourage sending various solutions to us because you will be delegating the decision to choose the best one - which is not good in a real-life scenario.
