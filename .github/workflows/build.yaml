@@ -1,10 +1,6 @@
-name: Build
+name: Build SonarQube Coverage
 on:
-  push:
-    branches:
-      - python-test
-  pull_request:
-    types: [opened, synchronize, reopened]
+  [push]
 jobs:
   sonarqube:
     name: SonarQube Cloud
