@@ -1,23 +1,30 @@
-name: Build SonarQube Coverage
+name: SonarQube Analysis
+
 on:
   [push]
+
 jobs:
-  sonarqube:
-    name: SonarQube Cloud
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-#       - name: Setup Python
-#         uses: actions/setup-python@v2
-#         with:
-#           python-version: '3.11'
-      - name: Install tox and any other packages
-        run: pip install tox
-      - name: Run tox
-        run: tox -e py
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  sonarqube:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov
+
+      - name: Run tests with coverage
+        run: |
+          pytest --cov=your_package_name --cov-report=xml
+
+      - name: Run SonarQube Scanner
+        run: |
+          docker run --rm \
+            -v "$(pwd):/usr/src" \
+            sonarsource/sonar-scanner-cli
