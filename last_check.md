@@ -1,8 +1,12 @@
+## General
+
 ### Subprocess: windows vs. linux
 Change in test_restarting_counter.py
 PYTHONPATH with semiu colons
 
 Not checked on linux though
+
+### Requirements with versions
 
 ## Missing
 
@@ -28,6 +32,11 @@ def _allocate_batch(self):
 So far it's just a print, it would be integrated into whatever log and monitoring system the app uses. 
 
 ## Pytest
+
+``` shell
 python -m coverage xml -o coverage.xml
+
 python -m coverage report --omit=*/tests/test_*
+
 python -m pytest .  --log-cli-level 20
+```
